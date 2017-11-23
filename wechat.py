@@ -10,20 +10,19 @@ WECHAT_TOKEN = "lxhsec"
 tornado.options.define("port", default=8000,type=int, help="") 
 
 class Wechat_handler(tornado.web.RequestHandler):
-	def get(self):
+	def prepare(self):
 		signature = self.get_argument("signature")
 		timestamp = self.get_argument("timestamp")
 		nonce = self.get_argument("nonce")  
-		echostr = self.get_argument("echostr")
 		tmp = [WECHAT_TOKEN, timestamp, nonce]
 		tmp.sort()
 		tmp = "".join(tmp)
 		sigsha1 = hashlib.sha1(tmp).hexdigest()
-		if signature == sigsha1:
-			self.write(echostr)
-
-		else:
+		if signature != sigsha1:
 			self.write("error")
+	def get(self):
+		echostr = self.get_argument("echostr")
+		self.write(echostr)
 
 	def post(self):
 		"""
@@ -62,7 +61,6 @@ class Wechat_handler(tornado.web.RequestHandler):
 					"Content" : "I love you",
 				}
 			}
-			self.write(xmltodict.unparse(rep_data))
 
 
 
