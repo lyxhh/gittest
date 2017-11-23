@@ -3,11 +3,13 @@ import tornado.options
 import tornado.ioloop
 import tornado.httpserver
 import hashlib
+import xmltodict
+import time
 
 WECHAT_TOKEN = "lxhsec"
 tornado.options.define("port", default=8000,type=int, help="") 
 
-class Wechat_handle(tornado.web.RequestHandler):
+class Wechat_handler(tornado.web.RequestHandler):
 	def get(self):
 		signature = self.get_argument("signature")
 		timestamp = self.get_argument("timestamp")
@@ -23,11 +25,51 @@ class Wechat_handle(tornado.web.RequestHandler):
 		else:
 			self.write("error")
 
+	def post(self):
+		"""
+<xml>
+	<ToUserName><![CDATA[toUser]]></ToUserName>
+	<FromUserName><![CDATA[fromUser]]></FromUserName> 
+	<CreateTime>1348831860</CreateTime>
+	<MsgType><![CDATA[text]]></MsgType>
+	<Content><![CDATA[this is a test]]></Content>
+	<MsgId>1234567890123456</MsgId>
+ </xml>
+		"""
+		xml_data = self.request.body
+		dict_data = xmltodict.parse(xml_data)
+		data_type = dict_data['xml']['MsgType']
+		if data_type == 'text':
+			"""text"""
+			content = dict_data['xml']['Content']
+			rep_data = {
+				"xml": {
+					"ToUserName" : dict_data['xml']['FromUserName'],
+					"FromUserName" : dict_data['xml']['ToUserName'],
+					"CreateTime" : int(time.time()),
+					"MsgType" : "text",
+					"Content" : content,
+				}
+			}
+			self.write(xmltodict.unparse(rep_data))
+		else:
+			rep_data = {
+				"xml": {
+					"ToUserName" : dict_data['xml']['FromUserName'],
+					"FromUserName" : dict_data['xml']['ToUserName'],
+					"CreateTime" : int(time.time()),
+					"MsgType" : "text",
+					"Content" : "I love you",
+				}
+			}
+			self.write(xmltodict.unparse(rep_data))
+
 
 
 
 
 def main():
+	tornado.options.parse_command_line()
 	app = tornado.web.Application([
 		(r"/wechat8000", Wechat_handler),
 
