@@ -17,9 +17,9 @@ class Wechat_handler(tornado.web.RequestHandler):
 		tmp = [WECHAT_TOKEN, timestamp, nonce]
 		tmp.sort()
 		tmp = "".join(tmp)
-		sigsha1 = hashlib.sha1(tmp).hexdigest()
+		sigsha1 = hashlib.sha1(tmp.encode('utf-8')).hexdigest()
 		if signature != sigsha1:
-			self.write("error")
+			self.send_error(403)
 	def get(self):
 		echostr = self.get_argument("echostr")
 		self.write(echostr)
@@ -50,7 +50,21 @@ class Wechat_handler(tornado.web.RequestHandler):
 					"Content" : content,
 				}
 			}
-			self.write(xmltodict.unparse(rep_data))
+		elif data_type == 'event':
+			if 'subscribe' == dict_data['xml']['Event']:
+				rep_data = {
+					"xml": {
+						"ToUserName" : dict_data['xml']['FromUserName'],
+						"FromUserName" : dict_data['xml']['ToUserName'],
+						"CreateTime" : int(time.time()),
+						"MsgType" : "text",
+						"Content" : "welcome",
+							}
+						}
+				
+			else:
+				rep_data = None
+
 		else:
 			rep_data = {
 				"xml": {
@@ -61,10 +75,11 @@ class Wechat_handler(tornado.web.RequestHandler):
 					"Content" : "I love you",
 				}
 			}
-
-
-
-
+		if rep_data:
+			rep_xml = xmltodict.unparse(rep_data)
+		else:
+			rep_xml = ''
+		self.write(rep_xml)
 
 def main():
 	tornado.options.parse_command_line()
