@@ -17,7 +17,7 @@ APPSECRET = "e9e1c5c0b1fa9669d9a545fa7887c9e0"
 tornado.options.define("port", default=8000,type=int, help="") 
 
 class Qrcode(tornado.web.RequestHandler):
-
+	"""获取带有场景值二维码"""
 	@tornado.gen.coroutine
 	def get(self):
 		scene_id = self.get_argument("sid")
@@ -27,6 +27,7 @@ class Qrcode(tornado.web.RequestHandler):
 			self.write("errmsg1: %s" % e)
 		else:
 			client = AsyncHTTPClient()
+			"""接口获取ticket值"""
 			url = "https://api.weixin.qq.com/cgi-bin/qrcode/create?access_token=%s" % token
 			rep_post_data = {"expire_seconds": 604800, "action_name": "QR_SCENE", "action_info": {"scene": {"scene_id": scene_id}}}
 			rep = HTTPRequest(
@@ -45,6 +46,7 @@ class Qrcode(tornado.web.RequestHandler):
 				self.write("<p>%s</p>" % code_url)
 
 class Access_Token(object):
+	
 	_access_token = None
 	_create_time = 0
 	_expires_in = 0
@@ -52,6 +54,7 @@ class Access_Token(object):
 	@classmethod
 	@tornado.gen.coroutine
 	def update_acces_token(cls):
+		"""更新接口调用凭据"""
 		client = AsyncHTTPClient()
 		url = "https://api.weixin.qq.com/cgi-bin/token?grant_type=" \
 		"client_credential&appid=%s&secret=%s" % (APPID, APPSECRET)
@@ -70,6 +73,7 @@ class Access_Token(object):
 	@classmethod
 	@tornado.gen.coroutine
 	def get_access_token(cls):
+		"""获取接口调用凭据"""
 		if (time.time() - cls._create_time > (cls._expires_in - 200)):
 			yield cls.update_acces_token()
 			raise tornado.gen.Return(cls._access_token)
@@ -79,6 +83,7 @@ class Access_Token(object):
 
 
 class Wechat_handler(tornado.web.RequestHandler):
+	"""对接微信服务器"""
 	def prepare(self):
 		signature = self.get_argument("signature")
 		timestamp = self.get_argument("timestamp")
@@ -107,7 +112,7 @@ class Wechat_handler(tornado.web.RequestHandler):
 		xml_data = self.request.body
 		dict_data = xmltodict.parse(xml_data)
 		data_type = dict_data['xml']['MsgType']
-
+		"""处理用户发送的文本消息"""
 		if 'text' == data_type:
 			"""text"""
 			content = dict_data['xml']['Content']
@@ -120,9 +125,10 @@ class Wechat_handler(tornado.web.RequestHandler):
 					"Content" : content,
 				}
 			}
-
+		"""处理关注事件"""
 		elif 'event' == data_type:
 			if 'subscribe' == dict_data['xml']['Event']:
+				"""未关注时，扫描二维码关注后开发者做出的回应"""
 				rep_data = {
 					"xml": 	{
 						"ToUserName" : dict_data['xml']['FromUserName'],
@@ -138,6 +144,7 @@ class Wechat_handler(tornado.web.RequestHandler):
 					rep_data['xml']['Content'] = "subscribe welcome scene_id is: %s" % scene_id
 
 			elif 'SCAN' == dict_data['xml']['Event']:
+				"""已关注时，扫描二维码关注后开发者做出的回应"""
 				rep_data = {
 					"xml": 	{
 						"ToUserName" : dict_data['xml']['FromUserName'],
@@ -154,6 +161,7 @@ class Wechat_handler(tornado.web.RequestHandler):
 				rep_data = None
 
 		elif 'image' == data_type:
+			"""处理用户发送的image消息"""
 			content = dict_data['xml']['MediaId']
 			rep_data = {
 				"xml": {
@@ -167,6 +175,7 @@ class Wechat_handler(tornado.web.RequestHandler):
 			}
 		
 		elif 'voice' == data_type:
+			"""处理用户发送的语音消息"""
 			content = dict_data['xml']['MediaId']
 			rep_data = {
 				"xml": {
@@ -180,6 +189,7 @@ class Wechat_handler(tornado.web.RequestHandler):
 			}
 
 		else:
+			"""其他事件"""
 			rep_data = {
 				"xml": {
 					"ToUserName" : dict_data['xml']['FromUserName'],
@@ -196,7 +206,7 @@ class Wechat_handler(tornado.web.RequestHandler):
 		self.write(rep_xml)
 
 class Redicturl(tornado.web.RequestHandler):
-	
+	"""获取用户基本信息"""
 	@tornado.gen.coroutine
 	def get(self):
 		code = self.get_argument("code")
@@ -230,13 +240,35 @@ class CreateMenuHandler(tornado.web.RequestHandler):
 			self.write("errmsg: %s" % e)
 		else:
 			menu_data = {
-				"button":[{
+				"button":[
+				{
 					"type":"view",
 					"name":"测试网页链接",
-					"url":"https://open.weixin.qq.com/connect/oauth2/authorize?appid=%s&redirect_uri=%s&response_type=code&scope=snsapi_userinfo&state=1#wechat_redirect" % (WECHAT_APPID, parse.quote("http://104.236.28.181/wechat8000/profile"))
-					},
-				]
-			}
+					"url":"https://open.weixin.qq.com/connect/oauth2/authorize?appid=%s&redirect_uri=%s&response_type=code&scope=snsapi_userinfo&state=1#wechat_redirect" % (APPID, parse.quote("http://104.236.28.181/wechat8000/profile"))
+				},
+
+ 				{
+				"name": "菜单",
+				"sub_button":[
+						{
+							"type": "view",
+							"name": "搜狗搜索",
+							"url": "http://www.soso.com/"
+						},
+						{
+							"type": "view",
+							"name": "百度",
+							"url": "http://www.baidu.com/"
+						},
+						{
+							"type": "view",
+							"name": "360搜索",
+							"url": "https://www.so.com/"
+						}
+				]}
+
+			]}
+
 			client = AsyncHTTPClient()
 			url = "https://api.weixin.qq.com/cgi-bin/menu/create?access_token=%s" % access_token
 			req = HTTPRequest(url, method="POST", body=json.dumps(menu_data, ensure_ascii=False))
