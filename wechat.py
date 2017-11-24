@@ -159,7 +159,8 @@ class Wechat_handler(tornado.web.RequestHandler):
 					"FromUserName" : dict_data['xml']['ToUserName'],
 					"CreateTime" : int(time.time()),
 					"MsgType" : "image",
-					"Content" : content,
+					"Image" : {"MediaId" : content}
+
 				}
 			}
 				
