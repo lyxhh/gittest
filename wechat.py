@@ -178,7 +178,6 @@ class Wechat_handler(tornado.web.RequestHandler):
 				}
 			}
 
-
 		else:
 			rep_data = {
 				"xml": {
@@ -196,6 +195,7 @@ class Wechat_handler(tornado.web.RequestHandler):
 		self.write(rep_xml)
 
 class Redicturl(tornado.web.RequestHandler):
+	
 	@tornado.gen.coroutine
 	def get(self):
 		code = self.get_argument("code")
