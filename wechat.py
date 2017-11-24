@@ -9,6 +9,7 @@ import time
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 import json
 import os
+from urllib import quote
 
 WECHAT_TOKEN = "lxhsec"
 APPID = "wxe69e1d5d9b26ed0a"
@@ -219,12 +220,39 @@ class Redicturl(tornado.web.RequestHandler):
 				self.render("index.html", user=json_get_user_rep)
 
 
+class CreateMenuHandler(tornado.web.RequestHandler):
+	"""创建微信菜单"""
+	@tornado.gen.coroutine
+	def get(self):
+		access_token = yield AccessToken.get_access_token() 
+		if not access_token:
+			self.write("token error")
+		else:
+			menu_data = {
+				"button":[{
+					"type":"view",
+					"name":"测试网页链接",
+					"url":"https://open.weixin.qq.com/connect/oauth2/authorize?appid=%s&redirect_uri=%s&response_type=code&scope=snsapi_userinfo&state=1#wechat_redirect" % (WECHAT_APPID, quote("http://wechat.idehai.com/wechat/user"))
+					},
+				]
+			}
+			client = AsyncHTTPClient()
+			url = "https://api.weixin.qq.com/cgi-bin/menu/create?access_token=%s" % access_token
+			req = HTTPRequest(url, method="POST", body=json.dumps(menu_data, ensure_ascii=False))
+			resp = yield client.fetch(req)
+			ret = json.loads(resp.body.decode('utf-8'))
+			if 0 == ret.get("errcode"):
+				self.write("创建菜单成功")
+			else:
+				self.write(ret.get("errmsg", "创建菜单失败"))
+
 def main():
 	tornado.options.parse_command_line()
 	app = tornado.web.Application([
 		(r"/wechat8000", Wechat_handler),
 		(r"/Qrcode", Qrcode),
-		(r"/wechat8000/profile", Redicturl)
+		(r"/wechat8000/profile", Redicturl),
+		(r"/menu", CreateMenuHandler),
 
 		],
 		template_path=os.path.join(os.path.dirname(__file__), "template")
