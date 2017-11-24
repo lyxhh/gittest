@@ -106,7 +106,8 @@ class Wechat_handler(tornado.web.RequestHandler):
 		xml_data = self.request.body
 		dict_data = xmltodict.parse(xml_data)
 		data_type = dict_data['xml']['MsgType']
-		if data_type == 'text':
+
+		if 'text' == data_type:
 			"""text"""
 			content = dict_data['xml']['Content']
 			rep_data = {
@@ -118,7 +119,8 @@ class Wechat_handler(tornado.web.RequestHandler):
 					"Content" : content,
 				}
 			}
-		elif data_type == 'event':
+
+		elif 'event' == data_type:
 			if 'subscribe' == dict_data['xml']['Event']:
 				rep_data = {
 					"xml": 	{
@@ -146,12 +148,11 @@ class Wechat_handler(tornado.web.RequestHandler):
 						}
 				scene_id = dict_data['xml']['EventKey']
 				rep_data['xml']['Content'] = "SCAN welcome scene_id is: %s" % scene_id
-				
-
 
 			else:
 				rep_data = None
-		elif data_type == 'image':
+
+		elif 'image' == data_type:
 			content = dict_data['xml']['MediaId']
 			rep_data = {
 				"xml": {
@@ -163,7 +164,21 @@ class Wechat_handler(tornado.web.RequestHandler):
 
 				}
 			}
-				
+		
+		elif 'voice' == data_type:
+			content = dict_data['xml']['MediaId']
+			rep_data = {
+				"xml": {
+					"ToUserName" : dict_data['xml']['FromUserName'],
+					"FromUserName" : dict_data['xml']['ToUserName'],
+					"CreateTime" : int(time.time()),
+					"MsgType" : "voice",
+					"Voice" : {"MediaId" : content}
+
+				}
+			}
+
+
 		else:
 			rep_data = {
 				"xml": {
