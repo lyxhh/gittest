@@ -8,6 +8,7 @@ import xmltodict
 import time
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 import json
+import os
 
 WECHAT_TOKEN = "lxhsec"
 APPID = "wxe69e1d5d9b26ed0a"
@@ -151,14 +152,14 @@ class Wechat_handler(tornado.web.RequestHandler):
 			else:
 				rep_data = None
 		elif data_type == 'image':
-			content = dict_data['xml']['Content']
+			content = dict_data['xml']['MediaId']
 			rep_data = {
 				"xml": {
 					"ToUserName" : dict_data['xml']['FromUserName'],
 					"FromUserName" : dict_data['xml']['ToUserName'],
 					"CreateTime" : int(time.time()),
 					"MsgType" : "image",
-					"Content" : dict_data['xml']['MediaId'],
+					"Content" : content,
 				}
 			}
 				
