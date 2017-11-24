@@ -6,9 +6,9 @@ import tornado.gen
 import hashlib
 import xmltodict
 import time
-from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 import json
 import os
+from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 from urllib import parse
 
 WECHAT_TOKEN = "lxhsec"
@@ -125,8 +125,10 @@ class Wechat_handler(tornado.web.RequestHandler):
 					"Content" : content,
 				}
 			}
-		"""处理关注事件"""
+
+	
 		elif 'event' == data_type:
+			"""处理关注事件"""
 			if 'subscribe' == dict_data['xml']['Event']:
 				"""未关注时，扫描二维码关注后开发者做出的回应"""
 				rep_data = {
@@ -247,7 +249,7 @@ class CreateMenuHandler(tornado.web.RequestHandler):
 					"url":"https://open.weixin.qq.com/connect/oauth2/authorize?appid=%s&redirect_uri=%s&response_type=code&scope=snsapi_userinfo&state=1#wechat_redirect" % (APPID, parse.quote("http://104.236.28.181/wechat8000/profile"))
 				},
 
- 				{
+				{
 				"name": "菜单",
 				"sub_button":[
 						{
