@@ -128,9 +128,10 @@ class Wechat_handler(tornado.web.RequestHandler):
 						"Content" : "welcome no args",
 							}
 						}
-				if "EventKey" in dict_data:
-					scene_id = dict_data['xml']['EventKey'][8:]
-					rep_data['xml']['Content'] = "welcome scene_id is: %s" % scene_id
+				if "EventKey" in dict_data['xml']:
+					EventKey = dict_data['xml']['EventKey']
+					scene_id = EventKey[8:]
+					rep_data['xml']['Content'] = "subscribe welcome scene_id is: %s" % scene_id
 
 			elif 'SCAN' == dict_data['xml']['Event']:
 				rep_data = {
