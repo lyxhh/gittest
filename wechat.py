@@ -150,7 +150,18 @@ class Wechat_handler(tornado.web.RequestHandler):
 
 			else:
 				rep_data = None
-
+		elif data_type == 'image':
+			content = dict_data['xml']['Content']
+			rep_data = {
+				"xml": {
+					"ToUserName" : dict_data['xml']['FromUserName'],
+					"FromUserName" : dict_data['xml']['ToUserName'],
+					"CreateTime" : int(time.time()),
+					"MsgType" : "image",
+					"Content" : dict_data['xml']['MediaId'],
+				}
+			}
+				
 		else:
 			rep_data = {
 				"xml": {
