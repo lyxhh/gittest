@@ -224,15 +224,16 @@ class CreateMenuHandler(tornado.web.RequestHandler):
 	"""创建微信菜单"""
 	@tornado.gen.coroutine
 	def get(self):
-		access_token = yield AccessToken.get_access_token() 
-		if not access_token:
-			self.write("token error")
+		try:
+			access_token = yield Access_Token.get_access_token() 
+		except Exception as e:
+			self.write("errmsg: %s" % e)
 		else:
 			menu_data = {
 				"button":[{
 					"type":"view",
 					"name":"测试网页链接",
-					"url":"https://open.weixin.qq.com/connect/oauth2/authorize?appid=%s&redirect_uri=%s&response_type=code&scope=snsapi_userinfo&state=1#wechat_redirect" % (WECHAT_APPID, parse.quote("http://wechat.idehai.com/wechat/user"))
+					"url":"https://open.weixin.qq.com/connect/oauth2/authorize?appid=%s&redirect_uri=%s&response_type=code&scope=snsapi_userinfo&state=1#wechat_redirect" % (WECHAT_APPID, parse.quote("http://104.236.28.181/wechat8000/profile"))
 					},
 				]
 			}
