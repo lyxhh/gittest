@@ -54,8 +54,8 @@ class Access_Token(object):
 		url = "https://api.weixin.qq.com/cgi-bin/token?grant_type=" \
 		"client_credential&appid=%s&secret=%s" % (APPID, APPSECRET)
 		rep = yield client.fetch(url)
-		print(rep.body)
-		print(rep.body.decode('utf-8'))
+		# print(rep.body)
+		# print(rep.body.decode('utf-8'))
 		jrep = json.loads(rep.body.decode('utf-8'))
 
 		if "errcode" in jrep:
@@ -167,13 +167,40 @@ class Wechat_handler(tornado.web.RequestHandler):
 			rep_xml = ''
 		self.write(rep_xml)
 
+class Redicturl(tornado.web.RequestHandler):
+	@tornado.gen.coroutine
+	def get(self):
+		code = self.get_argument("code")
+		client = AsyncHTTPClient()
+		url = "https://api.weixin.qq.com/sns/oauth2/access_token?" \
+		"appid=%s&secret=%s&code=%s&grant_type=authorization_code" % (APPID, APPSECRET, code)
+		rep = yield client.fetch(url)
+		json_data_rep = json.loads(rep.body.decode("utf-8"))
+		if "errcode" in json_data_rep:
+			self.write("access_token get fail")
+		else:
+			access_token_user = json_data_rep['access_token']
+			openid = json_data_rep['openid']
+			url = "https://api.weixin.qq.com/sns/userinfo?" \
+			"access_token=%s&openid=%s&lang=zh_CN" % (access_token_user, openid)
+			get_user_rep = yield client.fetch(url)
+			json_get_user_rep = json.loads(get_user_rep.body.decode("utf-8"))
+			if "errcode" in json_get_user_rep:
+				self.write("get user information fail")
+			else:
+				self.render("index.html", user=json_get_user_rep)
+
+
 def main():
 	tornado.options.parse_command_line()
 	app = tornado.web.Application([
 		(r"/wechat8000", Wechat_handler),
-		(r"/Qrcode", Qrcode)
+		(r"/Qrcode", Qrcode),
+		(r"/wechat8000/profile", Redicturl)
 
-		])
+		],
+		template_path=os.path.join(os.path.dirname(__file__), "template")
+		)
 	http_server = tornado.httpserver.HTTPServer(app)
 	http_server.listen(tornado.options.options.port)
 	tornado.ioloop.IOLoop.current().start()
