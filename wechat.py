@@ -9,7 +9,7 @@ import time
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 import json
 import os
-from urllib import quote
+from urllib import parse
 
 WECHAT_TOKEN = "lxhsec"
 APPID = "wxe69e1d5d9b26ed0a"
@@ -232,7 +232,7 @@ class CreateMenuHandler(tornado.web.RequestHandler):
 				"button":[{
 					"type":"view",
 					"name":"测试网页链接",
-					"url":"https://open.weixin.qq.com/connect/oauth2/authorize?appid=%s&redirect_uri=%s&response_type=code&scope=snsapi_userinfo&state=1#wechat_redirect" % (WECHAT_APPID, quote("http://wechat.idehai.com/wechat/user"))
+					"url":"https://open.weixin.qq.com/connect/oauth2/authorize?appid=%s&redirect_uri=%s&response_type=code&scope=snsapi_userinfo&state=1#wechat_redirect" % (WECHAT_APPID, parse.quote("http://wechat.idehai.com/wechat/user"))
 					},
 				]
 			}
